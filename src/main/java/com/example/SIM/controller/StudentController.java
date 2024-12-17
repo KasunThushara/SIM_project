@@ -3,6 +3,7 @@ package com.example.SIM.controller;
 import com.example.SIM.model.Student;
 import com.example.SIM.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,13 +35,17 @@ public class StudentController {
 
     // Update a student
     @PutMapping("/{id}")
-    public Student updateStudent(@PathVariable Long id, @RequestBody Student updatedStudent) {
-        Student student = studentRepository.findById(id).orElseThrow(() -> new RuntimeException("Student not found"));
-        student.setIndexNo(updatedStudent.getIndexNo());
-        student.setName(updatedStudent.getName());
-        student.setDob(updatedStudent.getDob());
-        student.setGpa(updatedStudent.getGpa());
-        return studentRepository.save(student);
+    public ResponseEntity<Student> updateStudent(@PathVariable Long id, @RequestBody Student updatedStudent) {
+        return studentRepository.findById(id)
+                .map(student -> {
+                    student.setIndexNo(updatedStudent.getIndexNo());
+                    student.setName(updatedStudent.getName());
+                    student.setDob(updatedStudent.getDob());
+                    student.setGpa(updatedStudent.getGpa());
+                    studentRepository.save(student);
+                    return ResponseEntity.ok(student);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // Delete a student

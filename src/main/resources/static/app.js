@@ -1,15 +1,85 @@
-const apiUrl = "http://localhost:8080/api/students"; // Your backend API base URL
+$(document).ready(function () {
+    let editMode = false; // Tracks whether you're editing a student
+    let editingId = null; // Stores the ID of the student being edited
 
-// Fetch and display all students
-function getStudents() {
-    fetch(apiUrl)
-        .then(response => response.json())
-        .then(data => {
-            const tableBody = document.getElementById("student-table-body");
-            tableBody.innerHTML = ""; // Clear existing rows
+    // Handle form submission
+    $('#student-form').submit(function (e) {
+        e.preventDefault();
 
-            data.forEach(student => {
-                const row = `
+        // Get form values
+        const indexNo = $('#indexNo').val();
+        const name = $('#name').val();
+        const dob = $('#dob').val();
+        const gpa = $('#gpa').val();
+
+        // Check if updating or creating
+        if (editMode) {
+            // Update existing student (PUT request)
+            $.ajax({
+                url: `/api/students/${editingId}`, // Include the ID in the URL
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ indexNo, name, dob, gpa }),
+                success: function () {
+                    alert('Student updated successfully!');
+                    resetForm();
+                    loadStudents(); // Reload student list
+                },
+                error: function () {
+                    alert('Error updating student.');
+                }
+            });
+        } else {
+            // Create new student (POST request)
+            $.ajax({
+                url: '/api/students',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ indexNo, name, dob, gpa }),
+                success: function () {
+                    alert('Student added successfully!');
+                    resetForm();
+                    loadStudents(); // Reload student list
+                },
+                error: function () {
+                    alert('Error adding student.');
+                }
+            });
+        }
+    });
+
+    // Edit button click handler
+    $('body').on('click', '.edit-btn', function () {
+        const studentId = $(this).data('id'); // Get ID from the Edit button
+        $.get(`/api/students/${studentId}`, function (student) {
+            // Populate form with student data
+            $('#indexNo').val(student.indexNo);
+            $('#name').val(student.name);
+            $('#dob').val(student.dob);
+            $('#gpa').val(student.gpa);
+
+            // Enable edit mode
+            editMode = true;
+            editingId = studentId;
+        });
+    });
+
+    // Reset form and variables
+    function resetForm() {
+        $('#indexNo').val('');
+        $('#name').val('');
+        $('#dob').val('');
+        $('#gpa').val('');
+        editMode = false;
+        editingId = null;
+    }
+
+    // Function to load all students
+    function loadStudents() {
+        $.get('/api/students', function (students) {
+            let rows = '';
+            students.forEach(student => {
+                rows += `
                     <tr>
                         <td>${student.id}</td>
                         <td>${student.indexNo}</td>
@@ -17,55 +87,16 @@ function getStudents() {
                         <td>${student.dob}</td>
                         <td>${student.gpa}</td>
                         <td>
-                            <button class="btn btn-sm btn-warning" onclick="editStudent(${student.id}, '${student.indexNo}', '${student.name}', '${student.dob}', ${student.gpa})">Edit</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteStudent(${student.id})">Delete</button>
+                            <button class="btn btn-warning edit-btn" data-id="${student.id}">Edit</button>
+                            <button class="btn btn-danger delete-btn" data-id="${student.id}">Delete</button>
                         </td>
                     </tr>
                 `;
-                tableBody.innerHTML += row;
             });
+            $('#student-table-body').html(rows);
         });
-}
+    }
 
-// Add or update a student
-document.getElementById("student-form").addEventListener("submit", function(e) {
-    e.preventDefault();
-
-    const indexNo = document.getElementById("indexNo").value;
-    const name = document.getElementById("name").value;
-    const dob = document.getElementById("dob").value;
-    const gpa = document.getElementById("gpa").value;
-
-    const student = { indexNo, name, dob, gpa };
-
-    fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(student)
-    })
-    .then(response => response.json())
-    .then(() => {
-        getStudents(); // Refresh table
-        document.getElementById("student-form").reset();
-    });
+    // Load students on page load
+    loadStudents();
 });
-
-// Edit a student
-function editStudent(id, indexNo, name, dob, gpa) {
-    document.getElementById("indexNo").value = indexNo;
-    document.getElementById("name").value = name;
-    document.getElementById("dob").value = dob;
-    document.getElementById("gpa").value = gpa;
-
-    // Update logic can be added here
-    alert("Modify the form and submit to update student details.");
-}
-
-// Delete a student
-function deleteStudent(id) {
-    fetch(`${apiUrl}/${id}`, { method: "DELETE" })
-        .then(() => getStudents());
-}
-
-// Initial call to fetch students
-getStudents();
