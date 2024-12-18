@@ -54,4 +54,14 @@ public class StudentController {
         studentRepository.deleteById(id);
         return "Student deleted successfully";
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Student>> searchStudents(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String indexNo,
+            @RequestParam(required = false) Double gpa) {
+
+        List<Student> students = studentRepository.searchStudents(name, indexNo, gpa);
+        return ResponseEntity.ok(students);
+    }
 }
