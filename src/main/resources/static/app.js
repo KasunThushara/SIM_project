@@ -64,6 +64,25 @@ $(document).ready(function () {
         });
     });
 
+    // Delete button click handler
+    $('body').on('click', '.delete-btn', function () {
+        const studentId = $(this).data('id'); // Get ID from the Delete button
+
+        if (confirm('Are you sure you want to delete this student?')) {
+            $.ajax({
+                url: `/api/students/${studentId}`,
+                type: 'DELETE',
+                success: function () {
+                    alert('Student deleted successfully!');
+                    loadStudents(); // Reload student list
+                },
+                error: function () {
+                    alert('Error deleting student.');
+                }
+            });
+        }
+    });
+
     // Reset form and variables
     function resetForm() {
         $('#indexNo').val('');
