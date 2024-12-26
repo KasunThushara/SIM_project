@@ -12,22 +12,22 @@ pipeline {
         stage('Build Application') {
             steps {
                 echo 'Building the application...'
-                sh 'mvn clean package -DskipTests'
+                bat 'mvn clean package -DskipTests'
             }
         }
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image...'
-                sh 'docker build -t your-dockerhub-username/student-info-system:latest .'
+                bat 'docker build -t kasun594/student-info-system:latest .'
             }
         }
         stage('Push to Docker Hub') {
             steps {
                 echo 'Pushing Docker image to Docker Hub...'
-                sh '''
-                    docker login -u $DOCKERHUB_CREDENTIALS_USR -p $DOCKERHUB_CREDENTIALS_PSW
-                    docker push your-dockerhub-username/student-info-system:latest
-                '''
+                bat """
+                    docker login -u %DOCKERHUB_CREDENTIALS_USR% -p %DOCKERHUB_CREDENTIALS_PSW%
+                    docker push kasun594/student-info-system:latest
+                """
             }
         }
     }
